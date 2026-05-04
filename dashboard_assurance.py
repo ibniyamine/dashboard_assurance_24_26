@@ -429,7 +429,11 @@ def create_comparison_dual_chart(df):
         gridwidth=1,
         gridcolor='rgba(209, 213, 219, 0.5)',
         tickfont=dict(color="#4b5563", size=11),
-        titlefont=dict(color="#1f2937", size=13)
+        # Correction ici : titlefont devient title=dict(font=...)
+        title=dict(
+            text="Date",  # Remplacez par le nom de votre axe X si besoin
+            font=dict(color="#1f2937", size=13)
+        )
     )
     
     fig.update_yaxes(
@@ -437,8 +441,13 @@ def create_comparison_dual_chart(df):
         gridwidth=1,
         gridcolor='rgba(209, 213, 219, 0.5)',
         tickfont=dict(color="#4b5563", size=11),
-        titlefont=dict(color="#1f2937", size=13)
+        # Correction ici aussi
+        title=dict(
+            text="Nombre", # Remplacez par le nom de votre axe Y si besoin
+            font=dict(color="#1f2937", size=13)
+        )
     )
+
     
     # Améliorer le style des barres et tooltips
     fig.update_traces(
@@ -539,13 +548,16 @@ def create_category_charts(df):
         )
     )
     
-    # Améliorer les axes
+        # Améliorer les axes
     fig_bar.update_xaxes(
         showgrid=True,
         gridwidth=1,
         gridcolor='rgba(209, 213, 219, 0.5)',
         tickfont=dict(color="#4b5563", size=11),
-        titlefont=dict(color="#1f2937", size=13)
+        # Correction : titlefont devient title=dict(font=...)
+        title=dict(
+            font=dict(color="#1f2937", size=13)
+        )
     )
     
     fig_bar.update_yaxes(
@@ -553,9 +565,12 @@ def create_category_charts(df):
         gridwidth=1,
         gridcolor='rgba(209, 213, 219, 0.5)',
         tickfont=dict(color="#4b5563", size=11),
-        titlefont=dict(color="#1f2937", size=13)
+        # Correction : titlefont devient title=dict(font=...)
+        title=dict(
+            font=dict(color="#1f2937", size=13)
+        )
     )
-    
+
     fig_bar.update_traces(
         hovertemplate='<b>Genre: %{x}</b><br>' +
                      'Statut: %{fullData.name}<br>' +
@@ -610,12 +625,16 @@ def create_yearly_records_charts(df):
     )
     
     # Améliorer les axes
+       # Améliorer les axes pour le graphique en barres
     fig_bar.update_xaxes(
         showgrid=True,
         gridwidth=1,
         gridcolor='rgba(209, 213, 219, 0.5)',
         tickfont=dict(color="#4b5563", size=11),
-        titlefont=dict(color="#1f2937", size=13)
+        # Correction de titlefont
+        title=dict(
+            font=dict(color="#1f2937", size=13)
+        )
     )
     
     fig_bar.update_yaxes(
@@ -623,8 +642,12 @@ def create_yearly_records_charts(df):
         gridwidth=1,
         gridcolor='rgba(209, 213, 219, 0.5)',
         tickfont=dict(color="#4b5563", size=11),
-        titlefont=dict(color="#1f2937", size=13)
+        # Correction de titlefont
+        title=dict(
+            font=dict(color="#1f2937", size=13)
+        )
     )
+
     
     fig_bar.update_traces(
         hovertemplate='<b>Année: %{x}</b><br>' +
@@ -657,13 +680,16 @@ def create_yearly_records_charts(df):
         )
     )
     
-    # Améliorer les axes
+       # Améliorer les axes
     fig_line.update_xaxes(
         showgrid=True,
         gridwidth=1,
         gridcolor='rgba(209, 213, 219, 0.5)',
         tickfont=dict(color="#4b5563", size=11),
-        titlefont=dict(color="#1f2937", size=13)
+        # Correction de titlefont
+        title=dict(
+            font=dict(color="#1f2937", size=13)
+        )
     )
     
     fig_line.update_yaxes(
@@ -671,8 +697,12 @@ def create_yearly_records_charts(df):
         gridwidth=1,
         gridcolor='rgba(209, 213, 219, 0.5)',
         tickfont=dict(color="#4b5563", size=11),
-        titlefont=dict(color="#1f2937", size=13)
+        # Correction de titlefont
+        title=dict(
+            font=dict(color="#1f2937", size=13)
+        )
     )
+
     
     fig_line.update_traces(
         hovertemplate='<b>Année: %{x}</b><br>' +
@@ -918,7 +948,6 @@ def main():
             hide_index=True
         )
     # Un séparateur de 1px d'épaisseur avec très peu d'espace autour
-    st.markdown('<hr style="margin: 5px 0px; border: 0.5px solid #f1f1f1;">', unsafe_allow_html=True)
     
     # Bloc 2: Analyse par Année
     st.markdown('<hr style="margin: 5px 0px; border: 2px solid #f1f1f1;">', unsafe_allow_html=True)
