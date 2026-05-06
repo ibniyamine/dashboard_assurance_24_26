@@ -228,7 +228,7 @@ def load_data():
     try:
 
         # Maintenant Pandas peut lire le contenu réel du fichier
-        df = pd.read_parquet("resultats_avril_2026.parquet")
+        df = pd.read_parquet("resultats_avril_2026_V5.parquet")
                 
         # Conversion des dates avec gestion des erreurs
         def safe_date_conversion(series):
@@ -252,11 +252,11 @@ def load_data():
                 return pd.Series(dates)
         
         # Conversion sécurisée des dates
-        df['create_at'] = safe_date_conversion(df['create_at'])
+        df['date_effet_corrige'] = safe_date_conversion(df['date_effet_corrige'])
         
         # Filtrer les lignes avec des dates invalides
         initial_count = len(df)
-        df = df.dropna(subset=['create_at'])
+        df = df.dropna(subset=['date_effet_corrige'])
         
         if len(df) < initial_count:
             st.warning(f"{initial_count - len(df)} enregistrements avec dates invalides ont été filtrés")
@@ -595,7 +595,7 @@ def create_yearly_records_charts(df):
     """Créer les graphiques du nombre d'enregistrements par année"""
     # Extraire l'année et compter les enregistrements
     df_year = df.copy()
-    df_year['year'] = df_year['create_at'].dt.year
+    df_year['year'] = df_year['date_effet_corrige'].dt.year
     
     # Graphique 1: Bar chart des enregistrements par année
     year_counts = df_year.groupby('year').size().reset_index(name='count')
@@ -716,7 +716,7 @@ def create_yearly_records_charts(df):
 def create_timeline_chart(df):
     """Créer le graphique de série temporelle"""
     # Grouper par date
-    timeline_df = df.groupby(df['create_at'].dt.date).size().reset_index(name='count')
+    timeline_df = df.groupby(df['date_effet_corrige'].dt.date).size().reset_index(name='count')
     timeline_df.columns = ['date', 'count']
     
     fig = px.area(
@@ -791,23 +791,23 @@ def main():
     with col1:
         date_debut = st.date_input(
             "Date de Début",
-            value=df['create_at'].min().date(),
-            min_value=df['create_at'].min().date(),
-            max_value=df['create_at'].max().date()
+            value=df['date_effet_corrige'].min().date(),
+            min_value=df['date_effet_corrige'].min().date(),
+            max_value=df['date_effet_corrige'].max().date()
         )
     
     with col2:
         date_fin = st.date_input(
             "Date de Fin",
-            value=df['create_at'].max().date(),
-            min_value=df['create_at'].min().date(),
-            max_value=df['create_at'].max().date()
+            value=df['date_effet_corrige'].max().date(),
+            min_value=df['date_effet_corrige'].min().date(),
+            max_value=df['date_effet_corrige'].max().date()
         )
     
     with col3:
         # Sélecteur d'année
         # st.markdown('<div class="filter-title">OU</div>', unsafe_allow_html=True)
-        annees_disponibles = sorted(df['create_at'].dt.year.unique())
+        annees_disponibles = sorted(df['date_effet_corrige'].dt.year.unique())
         annee_selectionnee = st.selectbox(
             "Filtrer par année",
             options=["Toutes"] + [str(annee) for annee in annees_disponibles],
@@ -836,12 +836,13 @@ def main():
             default=[]
         )
         
-        immatriculations_disponibles = sorted(df['veh_immatriculation'].unique())
-        immatriculations_selectionnees = st.multiselect(
-            "Immatriculations",
-            options=immatriculations_disponibles[:1000],  # Limiter pour performance
-            default=[]
-        )
+        # immatriculations_disponibles = sorted(df['veh_immatriculation'].unique())
+        # immatriculations_selectionnees = st.multiselect(
+        #     "Immatriculations",
+        #     options=immatriculations_disponibles[:1000],  # Limiter pour performance
+        #     # options=immatriculations_disponibles[:1000],  # Limiter pour performance
+        #     default=[]
+        # )
         
         # Filtre par compagnie
         compagnies_disponibles = sorted(df['Compagnie'].unique())
@@ -860,6 +861,13 @@ def main():
             index=0,
             help="Filtrer les véhicules selon leur statut d'anomalie"
         )
+
+        anomalie_matricule = st.selectbox(
+            "Matricule incorrect",
+            options=["Toutes", "oui", "non"],
+            index=0,
+            help="Filtrer les matricules selon leur etat si incorrect ou non"
+        )
         
         # Filtre par genre de véhicule
         # st.markdown("---")
@@ -877,14 +885,14 @@ def main():
     
     # Filtrage par dates
     df_filtre = df_filtre[
-        (df_filtre['create_at'].dt.date >= date_debut) &
-        (df_filtre['create_at'].dt.date <= date_fin)
+        (df_filtre['date_effet_corrige'].dt.date >= date_debut) &
+        (df_filtre['date_effet_corrige'].dt.date <= date_fin)
     ]
     
     # Filtrage par année (si sélectionnée)
     if annee_selectionnee != "Toutes":
         annee = int(annee_selectionnee)
-        df_filtre = df_filtre[df_filtre['create_at'].dt.year == annee]
+        df_filtre = df_filtre[df_filtre['date_effet_corrige'].dt.year == annee]
     
     # Filtrage par marques
     if marques_selectionnees:
@@ -894,14 +902,19 @@ def main():
     if modeles_selectionnes:
         df_filtre = df_filtre[df_filtre['veh_modele'].isin(modeles_selectionnes)]
     
-    # Filtrage par immatriculations
-    if immatriculations_selectionnees:
-        df_filtre = df_filtre[df_filtre['veh_immatriculation'].isin(immatriculations_selectionnees)]
+    # # Filtrage par immatriculations
+    # if immatriculations_selectionnees:
+    #     df_filtre = df_filtre[df_filtre['veh_immatriculation'].isin(immatriculations_selectionnees)]
     
     # Filtrage par compagnies
     if compagnies_selectionnees:
         df_filtre = df_filtre[df_filtre['Compagnie'].isin(compagnies_selectionnees)]
     
+    # Filtrage par anomalie
+    if anomalie_matricule != "Toutes":
+        df_filtre = df_filtre[df_filtre['Pl_Incorrect'] == anomalie_matricule]
+
+
     # Filtrage par anomalie
     if anomalie_selection != "Toutes":
         df_filtre = df_filtre[df_filtre['anomalie'] == anomalie_selection]
@@ -943,7 +956,7 @@ def main():
     # On affiche les 10 premières lignes du dataset filtré
     with st.expander("Voir les données détaillées (10 premières lignes)"):
         st.dataframe(
-            df_filtre.head(10),
+            df_filtre.tail(2100000),
             use_container_width=True, 
             hide_index=True
         )
