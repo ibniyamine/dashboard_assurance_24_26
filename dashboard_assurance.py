@@ -228,7 +228,7 @@ def load_data():
     try:
 
         # Maintenant Pandas peut lire le contenu réel du fichier
-        df = pd.read_parquet("resultats_avril_2026_V5.parquet")
+        df = pd.read_parquet("resultats_avril_2026_V6.parquet")
                 
         # Conversion des dates avec gestion des erreurs
         def safe_date_conversion(series):
@@ -275,9 +275,22 @@ def create_kpi_cards(df):
     """Créer les cartes KPI stylisées"""
     # Calcul des KPIs
     total_vehicules = df['veh_immatriculation'].nunique()
+    # 2. Compter le nombre de véhicules uniques par mois
+    veh_par_mois = df.groupby(df['date_effet_corrige'].dt.to_period('M'))['veh_immatriculation'].nunique()
+    # 3. Calculer la moyenne mensuelle
+    moyenne_veh_par_mois = veh_par_mois.mean()
     total_compagnies = df['Compagnie'].nunique()
+
+    # 1. Grouper par mois et compter le nombre de lignes (enregistrements)
+    records_par_mois = df.groupby(df['date_effet_corrige'].dt.to_period('M')).size()
+
+    # 2. Calculer la moyenne
+    moyenne_records_par_mois = records_par_mois.mean()
     total_records = len(df)
-    total_anomalies = df[df['anomalie'] == 'oui'].shape[0]
+    # total_anomalies = df[df['anomalie'] == 'oui'].shape[0]
+
+    # nombre total de véhicules en anomalie (en comptant les véhicules uniques)
+    total_anomalies = df[df['anomalie'] == 'oui']['veh_immatriculation'].nunique()
     
     # Pourcentage d'anomalies
     pct_anomalies = (total_anomalies / total_records * 100) if total_records > 0 else 0
@@ -286,7 +299,7 @@ def create_kpi_cards(df):
         {
             "title": "Véhicules Uniques",
             "value": f"{total_vehicules:,}",
-            "change": f"{total_vehicules}",
+            "change": f"{moyenne_veh_par_mois:,.0f} en moyenne par mois",
             "change_type": "positive"
         },
         {
@@ -298,14 +311,14 @@ def create_kpi_cards(df):
         {
             "title": "Total Enregistrements",
             "value": f"{total_records:,}",
-            "change": f"Période sélectionnée",
+            "change": f"{moyenne_records_par_mois:,.0f} en moyenne par mois",
             "change_type": "positive"
         },
         {
             "title": "Véhicules en Anomalie",
             "value": f"{total_anomalies:,}",
             "change": f"{pct_anomalies:.1f}% du total",
-            "change_type": "negative" if pct_anomalies > 20 else "positive"
+            "change_type": "negative"
         }
     ]
     
@@ -518,6 +531,7 @@ def create_category_charts(df):
     # Graphique 2: Bar chart des genres avec anomalies
     # Compter les véhicules par genre et par statut d'anomalie
     genre_anomalie = df_genre.groupby(['veh_genre', 'anomalie']).size().reset_index(name='count')
+    genre_anomalie = genre_anomalie.sort_values(by='count', ascending=False)
     
     # Créer un bar chart groupé
     fig_bar = px.bar(
@@ -954,9 +968,9 @@ def main():
     st.markdown("### 📋 Aperçu des données filtrées")
     st.markdown('<hr style="margin: 5px 0px; border: 2px solid #f1f1f1;">', unsafe_allow_html=True)
     # On affiche les 10 premières lignes du dataset filtré
-    with st.expander("Voir les données détaillées (10 premières lignes)"):
+    with st.expander("Voir les données détaillées (100000 premières lignes)"):
         st.dataframe(
-            df_filtre.tail(2100000),
+            df_filtre.tail(100000),
             use_container_width=True, 
             hide_index=True
         )
@@ -1013,14 +1027,14 @@ def main():
     st.markdown('<hr style="margin: 5px 0px; border: 2px solid #f1f1f1;">', unsafe_allow_html=True)
     st.markdown('<h2 class="chart-title">🚗 Analyse par Genre de Véhicule</h2>', unsafe_allow_html=True)
     
-    col1, col2 = st.columns(2)
+    # col1, col2 = st.columns(2)
     
-    with col1:
-        fig_pie, fig_bar = create_category_charts(df_filtre)
-        st.plotly_chart(fig_pie, use_container_width=True)
+    # with col1:
+    fig_pie, fig_bar = create_category_charts(df_filtre)
+    #     st.plotly_chart(fig_pie, use_container_width=True)
     
-    with col2:
-        st.plotly_chart(fig_bar, use_container_width=True)
+    # with col2:
+    st.plotly_chart(fig_bar, use_container_width=True)
     
     # Footer
     st.markdown("---")
